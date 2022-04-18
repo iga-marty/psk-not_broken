@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Расчет ПСК</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<p style="text-align: center;">&nbsp;</p>
+<h2 style="text-align: center;"><strong>Расчет ПСК:&nbsp;</strong></h2>
+<p/>
+ {% block content %}
+<table style="height: 50px; margin-left: auto; margin-right: auto; width: 308px;">
+<tbody>
+<tr>
+<td style="width: 150px; text-align: right;">Ставка в %%</td>
+<td style="width: 8px;">:</td>
+<td style="width: 150px;">{{rt}}</td>
+</tr>
+<tr>
+<td style="width: 150px; text-align: right;">СЖ в %%</td>
+<td style="width: 8px;">:</td>
+<td style="width: 150px;">{{strah}}</td>
+</tr>
+<tr>
+<td style="width: 150px; text-align: right;">ПСК в %%</td>
+<td style="width: 8px;">:</td>
+<td style="width: 150px;">{{psk}}</td>
+</tr>
+<tr>
+<td style="width: 150px; text-align: right;">ПСК ДВ</td>
+<td style="width: 8px;">:</td>
+<td style="width: 150px;">{{pskdv}}</td>
+</tr>
+<tr>
+<td style="width: 150px; text-align: right;">Страховая премия</td>
+<td style="width: 8px;">:</td>
+<td style="width: 150px;">{{strsum}}</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+    {{ tab.to_html() | safe }}
+
+</p>
+<p style=>&nbsp;</p>
+<p style="text-align: center;"><a class ="myButton" href="{{ url_for('psk') }}">&lArr; Назад&nbsp;</a></p>
+ {% endblock %}
+
+</body>
+</html>
+
+
+
