@@ -225,3 +225,13 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+/.idea/.gitignore
+/.idea/aws.xml
+/.idea/deployment.xml
+/.idea/sonarlint/issuestore/index.pb
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/psk.iml
+/.idea/vcs.xml
