@@ -1,19 +1,15 @@
-import ast  # преобразование любого полуструктурироанного бреда в словарь
-import argparse  # для возможности использования CLI
 import datetime  # инструменты для работы с датами
 from datetime import timedelta  # отдельная субфункция для работы с датами, для удобства вызова
-import textwrap  # форматирование текста
+
 import pandas as pd  # инструменты для работы с таблицами
 from monthdelta import \
     monthdelta  # аналог пакета по работе с датами, ориентируется на операции с месяцами (аналог addmonths())
-import os.path
+
 dtshift = True
 
+
 def check_start(inp):
-    if inp == 'today':
-        output = datetime.date.today()
-        return output
-    elif inp =='':
+    if inp in ['today', '']:
         output = datetime.date.today()
         return output
     else:
@@ -26,10 +22,7 @@ def check_start(inp):
 
 
 def check_day(inp):
-    if inp == 'today':
-        output = int(datetime.date.today().day)
-        return output
-    elif inp == '':
+    if inp in ['today', '']:
         output = int(datetime.date.today().day)
         return output
     else:
@@ -51,59 +44,38 @@ def typ_cred(inp):
         return 1
 
 
-def check_cache():
-    if args.use_cache == 1:
-        if os.path.isfile('cache.txt'):
-            return 1
-        else:
-            with open('cache.txt', 'w') as file:
-                file.write('{\'[0, 0, 0, 0.11, 48, 100000.0]\': (11.203, 24472.27)}')
-            return 1
-    else:
-        return 0
-
-
-def write_cache():  # запись файла кэша
-    with open("cache.txt", "w") as file:
-        file.write(str(cache))
-
-
-def read_cache():  # чтение файла кэша
-    with open('cache.txt', 'r') as file:
-        dct = file.read().strip("'")
-        return dct
-
-
 def ann(x, y, z):  # аннуитет. x - ставка, y - полный срок (формула уже учитывает сокращение на 1 месяц), z - сумма.
     return z * ((x / 12 * ((1 + x / 12) ** (y - 1))) / ((1 + x / 12) ** (y - 1) - 1))
 
 
-def next_i_months(date,
-                  j):  # дата в будущем. Аналог addmonths())
+def next_i_months(date, j):  # дата в будущем. Аналог addmonths())
     return date + monthdelta(j)
 
 
-def nxtdt(x, y, z,
-          p):  # перенос даты на следующий рабочий день.
+def assert_holidays(i, y, a, b):
+    if i < y:
+        if b in [5, 6]:
+            a = a + datetime.timedelta(days=(7 - b))
+    else:
+        if b in [5, 6]:
+            a = a + datetime.timedelta(days=-2)
+    return a
+
+
+def nxtdt(x, y, z, p):  # перенос даты на следующий рабочий день.
     # x - дата начала, y - полный срок,
     # z(1) - смещение на рабочий день, p - дата платежа
 
     lst = []
-    if p > 0:  #
+    if p > 0:
         x = datetime.date(year=x.year, month=x.month, day=p)
 
     for i in range(y + 1):
         a = next_i_months(x, i)
         b = datetime.datetime.weekday(a)
         if z:
-            if i < y:
-                if b == 5 or b == 6:
-                    a = a + datetime.timedelta(days=(7 - b))
-            else:
-                if b == 5 or b == 6:
-                    a = a + datetime.timedelta(days=-(7 - 5))
+            a = assert_holidays(i, y, a, b)
         lst.append(a)
-        i += 1
     return lst
 
 
@@ -135,9 +107,7 @@ def get_y_days_on_split(start, end):  # определение количест�
     return firsty, secondy
 
 
-def count_proc(row, left, rt):    # счтаем проценты. Функция вызывается для точечного расчета процентов.
-
-
+def count_proc(row, left, rt):  # счтаем проценты. Функция вызывается для точечного расчета процентов.
     if row.leapinside:
         if row.needsplit:
             print(
@@ -152,39 +122,18 @@ def count_proc(row, left, rt):    # счтаем проценты. Функци�
         else:
             return (left / get_y_days_on_split(row.prevpmt, row.payday)[0] * rt
                     * split_month(row.prevpmt, row.payday)[0]) + (
-                       left / get_y_days_on_split(row.prevpmt, row.payday)[1]
-                       * rt * split_month(row.prevpmt, row.payday)[1])
-
-
-def count_proc_2(row, lst, rt):    # Расчет процентов в итеративных операциях.
-                                # Параметр lst берет величину остатка задолженности.
-    left = lst
-    if row.leapinside:
-        if row.needsplit:
-            print(
-                "Что-то пошло не так. Внутри високосного года не может быть разделения периодов на 365/366 дней"
-            )
-            return 0
-        else:
-            return left / 366 * rt * row['diff']
-    else:
-        if not row.needsplit:
-            return left / 365 * rt * row['diff']
-        else:
-            return (left / get_y_days_on_split(row.prevpmt, row.payday)[0] * rt
-                    * split_month(row.prevpmt, row.payday)[0]) + (
-                       left / get_y_days_on_split(row.prevpmt, row.payday)[1]
-                       * rt * split_month(row.prevpmt, row.payday)[1])
+                           left / get_y_days_on_split(row.prevpmt, row.payday)[1]
+                           * rt * split_month(row.prevpmt, row.payday)[1])
 
 
 def itercred(rng, mat, sm, rt):  # итеративная функция построения графика по кредиту.
     prevost = sm
     last_i = sm
     ind = 0
-    for index, row in rng.iterrows():   # итерируем строки таблицы.
-                                            # Индекс - номер строки от 0, row - кортеж с данными по строке.
-        rng.loc[index, 'proc'] = count_proc_2(row, last_i, rt)    # для каждой ячейки proc вычисляем величину процентов.
-        rng.loc[0, 'proc'] = count_proc(rng.loc[0], sm, rt)     # величина процентов для первого платежа
+    for index, row in rng.iterrows():  # итерируем строки таблицы.
+        # Индекс - номер строки от 0, row - кортеж с данными по строке.
+        rng.loc[index, 'proc'] = count_proc(row, last_i, rt)  # для каждой ячейки proc вычисляем величину процентов.
+        rng.loc[0, 'proc'] = count_proc(rng.loc[0], sm, rt)  # величина процентов для первого платежа
         rng.loc[index, 'cred'] = rng.loc[index, 'annuity'] - rng.loc[index, 'proc']
         # после вычисления процентов вставляем платеж по ссуде исходя из величины аннуитета
 
@@ -202,21 +151,21 @@ def itercred(rng, mat, sm, rt):  # итеративная функция пос�
             rng.loc[index, 'ostout'] = 0
             prevost = 0
         if (rng.loc[index, 'cred'] == 0) and (
-                    rng.loc[index, 'ostout'] == 0):
+                rng.loc[index, 'ostout'] == 0):
             rng.drop(rng.index[index], inplace=True)  # Сокращаем лишние строки снизу после выплаты всей ссуды.
-            # changed_mat = True  # фиксируем сокращение срока
             ind = index
         if ind > 0:
             rng.drop(rng.index[ind], inplace=True)  # удаляем ВСЕ строки после последней строки.
     return rng
 
 
-def itercard(rng, mat, sm, rt):  # итеративная функция построения графика по карте.
+def itercard(rng, sm, rt):  # итеративная функция построения графика по карте.
     for index, row in rng.iterrows():
-        rng.loc[index, 'proc'] = count_proc_2(row, sm, rt)
+        rng.loc[index, 'proc'] = count_proc(row, sm, rt)
         rng.loc[0, 'proc'] = count_proc(rng.loc[0], sm, rt)
         rng.loc[index, 'cred'] = 0
     return rng
+
 
 # PSK #
 
@@ -245,7 +194,7 @@ def dfl(row, *rat):  # расчет дисконтированного дене�
 def dflder(row, *rat):  # расчет производной от дисконтированного денежного потока.
     rate = rat[0]
     discder = -((row['flow'] * ((rate + 1) ** (-row['q'] - 1)) * (
-        (row['q'] * row['e'] * rate) + row['q'] + (row['e'] * rate) + row['e'])) / ((row['e'] * rate + 1) ** 2))
+            (row['q'] * row['e'] * rate) + row['q'] + (row['e'] * rate) + row['e'])) / ((row['e'] * rate + 1) ** 2))
     return discder
 
 
@@ -265,18 +214,16 @@ def leapinside():
     return lambda row: row.leapend & row.leapstart  # входит ли весь период в високосный год.
 
 
-def graph(sm, mat, rt, dtStart, pday, card, card_comm, sum_card_comm, strah):
-
-    dtend = dtStart + monthdelta(mat)  # Дата окончания.
-    dtrange = pd.DataFrame(data=nxtdt(dtStart, mat, dtshift, pday), columns={
+def graph(sm, mat, rt, dtstart, pday, card, card_comm, sum_card_comm, strah):
+    dtend = dtstart + monthdelta(mat)  # Дата окончания.
+    dtrange = pd.DataFrame(data=nxtdt(dtstart, mat, dtshift, pday), columns={
         'payday'})  # формируем массив dtrange со столбцом payday - дата платежа, с которым будем работать.
-    dtrange.loc[0, 'payday'] = dtStart
+    dtrange.loc[0, 'payday'] = dtstart
     dtrange.loc[mat, 'payday'] = dtend  # корректируем последний платеж. Перенос на рабочий день нам не нужен.
-    # a = ann(rt, mat, sm)  # фиксируем аннуитет. Нигде не используем, это для дебага.
     dtrange['prevpmt'] = dtrange.payday.shift(1).fillna(
-        dtStart)  # вставляем дату предыдущего платежа. Технически мы копируем столбец payday и сдвигаем его вниз.
-    dtrange.loc[0, 'prevpmt'] = dtStart
-    dtrange.loc[1, 'prevpmt'] = dtStart
+        dtstart)  # вставляем дату предыдущего платежа. Технически мы копируем столбец payday и сдвигаем его вниз.
+    dtrange.loc[0, 'prevpmt'] = dtstart
+    dtrange.loc[1, 'prevpmt'] = dtstart
     dtrange = dtrange[['prevpmt', 'payday']]  # меняю столбцы местами. Мне в таком виде было удобней.
     dtrange['diff'] = (
             dtrange.payday - dtrange.prevpmt).dt.days  # вычисляем длительность между платежами.
@@ -296,7 +243,7 @@ def graph(sm, mat, rt, dtStart, pday, card, card_comm, sum_card_comm, strah):
     if card == 0:  # убер-сложная логика. Никто не разберется
         dtrange = itercred(dtrange, mat, sm, rt)
     else:
-        dtrange = itercard(dtrange, mat, sm, rt)
+        dtrange = itercard(dtrange, sm, rt)
 
     # noinspection PyUnresolvedReferences
     dtrange = dtrange.dropna(axis='index', how='all')  # очищаем от пустых значений (NULL)
@@ -315,7 +262,6 @@ def graph(sm, mat, rt, dtStart, pday, card, card_comm, sum_card_comm, strah):
     if card == 1 and card_comm == 1:
         dtrange.flow = dtrange.flow + sum_card_comm
 
-
     pr = 0.00000000001  # параметры сходимости. Бесконечно увеличивать смысла нет, для float расчетов этого достаточно.
     maxiter = 100  # предельное число итераций, в ходе которых должна быть достигнута целевая сходимость
     itercount = 1  # глобальная переменная
@@ -327,7 +273,7 @@ def graph(sm, mat, rt, dtStart, pday, card, card_comm, sum_card_comm, strah):
     # Готовим график к расчету ПСК #
 
     # добваляем в график еще один ряд. При расчете ПСК выдача - тоже денежный поток.
-    dtrange.loc[-1] = [dtStart, dtStart, 0, sm, 0, -sm, (-sm+sum_card_comm*card_comm)]
+    dtrange.loc[-1] = [dtstart, dtstart, 0, sm, 0, -sm, (-sm + sum_card_comm * card_comm)]
     dtrange.index = dtrange.index + 1  # обновляем индекс
     dtrange.sort_index(inplace=True)
     if card == 1:  # Только для карт. На протяжении всего периода сумма потока включает в себя сумму кредита.
@@ -335,7 +281,7 @@ def graph(sm, mat, rt, dtStart, pday, card, card_comm, sum_card_comm, strah):
         dtrange.loc[mat, 'flow'] = sm + dtrange.loc[mat, 'proc']
         dtrange.insert(4, 'Комиссия', sum_card_comm)
         dtrange.loc[mat, 'Комиссия'] = 0
-    strsum = sm * strah/100 * 1 * mat/12
+    strsum = sm * strah / 100 * 1 * mat / 12
     dtrange.flow[0] = dtrange.flow[0] + strsum
     # paste magic and unicorns here #
     while itercount <= maxiter:  # итерируем пока не будет достигнута сходимость.
@@ -357,7 +303,7 @@ def graph(sm, mat, rt, dtStart, pday, card, card_comm, sum_card_comm, strah):
     tab = dtrange
     tab = tab.drop(columns=['prevpmt', 'diff', 'q', 'e', 'disc', 'discder'])
     tab = tab.rename(index=str, columns={"payday": "Дата потока", "ostout": "Остаток долга", "proc": "Проценты",
-                                         "cred":"Ссуда", "flow":"Денежный поток", })
+                                         "cred": "Ссуда", "flow": "Денежный поток", })
     pd.options.display.float_format = '{: .2f}'.format
 
-    return (pskg, pskdvg, tab, rt*100, strsum, strah)
+    return pskg, pskdvg, tab, rt * 100, strsum, strah

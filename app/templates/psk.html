@@ -29,14 +29,14 @@
 <table style="width: 75%; margin-left: auto; margin-right: auto;">
 <tbody>
 <tr>
-<td style="width: 20%;">{{ form.dtStart.label }}</td>
+<td style="width: 20%;">{{ form.dtstart.label }}</td>
 <td style="width: 20%;">{{ form.pday.label }}</td>
 <td style="width: 20%;">{{ form.card_comm.label }}</td>
 <td style="width: 20%;">{{ form.sum_card_comm.label }}</td>
 <td style="width: 20%;">{{ form.strah.label }}</td>
 </tr>
 <tr>
-<td style="width: 20%;">{{ form.dtStart(class="dt_class") }}<br /> {% for error in form.dtStart.errors %} [{{ error }}] {% endfor %}</td>
+<td style="width: 20%;">{{ form.dtstart(class="dt_class") }}<br /> {% for error in form.dtstart.errors %} [{{ error }}] {% endfor %}</td>
 <td style="width: 20%;">{{ form.pday(class="inp_class") }}<br /> {% for error in form.pday.errors %} [{{ error }}] {% endfor %}</td>
 <td style="width: 20%;">{{ form.card_comm(class="select_class") }}<br /> {% for error in form.card_comm.errors %} [{{ error }}] {% endfor %}</td>
 <td style="width: 20%;">{{ form.sum_card_comm(class="inp_class") }}<br /> {% for error in form.sum_card_comm.errors %} [{{ error }}] {% endfor %}</td>
