@@ -2,9 +2,8 @@
 
 from datetime import date
 
-from wtforms import *
-from wtforms import Form
-from wtforms.fields.html5 import DateField
+from wtforms import FloatField, Form, HiddenField, IntegerField, SelectField, SubmitField
+from wtforms.fields import DateField
 from wtforms.validators import DataRequired
 
 
