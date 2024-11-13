@@ -33,11 +33,11 @@ def echo():
     sm = form['sm']
     strah = form['strah']
 
-    psk, pskdv, tab, rt, strsum, strah = newcalc.graph(float(sm), int(mat), float(rt.replace(',', '.')) / 100,
+    psk, pskdv, tab, rt, strsum = newcalc.graph(float(sm), int(mat), float(rt.replace(',', '.')) / 100,
                                                        newcalc.check_start(dtstart), newcalc.check_day(pday),
                                                        newcalc.typ_cred(card), int(card_comm),
                                                        float(sum_card_comm), bool(card_comm_postpone), float(strah))
-    template_context = dict(psk=psk, pskdv=pskdv, tab=tab, rt=rt, strsum=strsum, strah=strah)
+    template_context = dict(psk=psk, pskdv=pskdv, tab=tab, rt=rt, strsum=strsum)
     return render_template('resp.html', **template_context)
 
 

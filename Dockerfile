@@ -1,5 +1,5 @@
 # pull official base image
-FROM python:3.9.7
+FROM python:3.6.3-slim
 
 # set work directory
 WORKDIR /usr/src/psk
@@ -17,5 +17,5 @@ RUN pip install -r requirements.txt
 COPY . /usr/src/psk/
 RUN chmod 600 gunicorn_starter.sh
 RUN chmod +x gunicorn_starter.sh
-EXPOSE 5000
-ENTRYPOINT ["sh", "gunicorn_starter.sh"]
+
+ENTRYPOINT ["./gunicorn_starter.sh"]

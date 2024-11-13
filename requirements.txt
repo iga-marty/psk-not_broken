@@ -4,4 +4,3 @@ MonthDelta~=0.9.1
 pandas==1.4.2
 numpy==1.26.4
 WTForms==3.0.1
-gunicorn==20.1.0

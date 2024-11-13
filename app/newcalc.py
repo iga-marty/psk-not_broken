@@ -38,14 +38,15 @@ def check_day(inp):
 
 
 def typ_cred(inp):
-    if inp == 'cred':
-        return 0
-    elif inp == 0:
-        return 0
-    elif inp == 'card':
-        return 1
-    elif inp == 1:
-        return 1
+    match inp:
+        case 'cred':
+            return 0
+        case 0:
+            return 0
+        case 'card':
+            return 1
+        case 1:
+            return 1
 
 
 def ann(x, y, z):  # аннуитет. x - ставка, y - полный срок (формула уже учитывает сокращение на 1 месяц), z - сумма.
@@ -194,7 +195,7 @@ def qk(frame, base):  # коэффициент Q. Функция работае�
     # q = abs((frame['payday'] - first(frame)).dt.days // float(base))
     a = frame['payday']
     b = first(frame)
-    q = abs(((a - b)/np.timedelta64(1, 'D')).astype(int) // float(base))
+    q = abs(((a - b)/np.timedelta64(1, 'D')) // float(base))
     return q
 
 
@@ -202,7 +203,7 @@ def ek(frame, base):  # коэффициент E. Работает на табл
     # i, d = divmod(((frame['payday'] - first(frame)).dt.days - frame.q * float(base)) / float(base), 1)
     a = frame['payday']
     b = first(frame)
-    i, d = divmod((((a - b)/np.timedelta64(1, 'D')).astype(int) - frame.q * float(base)) / float(base), 1)
+    i, d = divmod((((a - b)/np.timedelta64(1, 'D')) - frame.q * float(base)) / float(base), 1)
     e = abs(d)
     return e
 
