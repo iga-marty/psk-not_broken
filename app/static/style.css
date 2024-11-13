@@ -24,6 +24,21 @@ font-size: 16px;
     height: 21px;
     padding-left: 10px;
 }
+/*.check_class {*/
+/*    border: 2px solid #1C6EA4;*/
+/*    border-radius: 5px 5px 5px 5px;*/
+/*    width: 27px;*/
+/*    height: 27px;*/
+/*    padding-left: 0px;*/
+/*    margin-left: 0;*/
+/*}*/
+
+/*.checkmark:after {*/
+/*    content: "";*/
+/*    position: absolute;*/
+/*    display: none;*/
+/*}*/
+
 img {
     position: absolute;
     margin: auto;
@@ -133,3 +148,4 @@ table.dataframe tfoot .links a{
   padding: 2px 8px;
   border-radius: 5px;
 }
+

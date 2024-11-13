@@ -1,9 +1,13 @@
+# coding: UTF-8
+
 import datetime  # инструменты для работы с датами
 from datetime import timedelta  # отдельная субфункция для работы с датами, для удобства вызова
 
+import numpy as np
 import pandas as pd  # инструменты для работы с таблицами
 from monthdelta import \
     monthdelta  # аналог пакета по работе с датами, ориентируется на операции с месяцами (аналог addmonths())
+from pandas import Timedelta
 
 dtshift = True
 
@@ -107,6 +111,7 @@ def get_y_days_on_split(start, end):  # определение количест�
     return firsty, secondy
 
 
+
 def count_proc(row, left, rt):  # счтаем проценты. Функция вызывается для точечного расчета процентов.
     if row.leapinside:
         if row.needsplit:
@@ -115,15 +120,24 @@ def count_proc(row, left, rt):  # счтаем проценты. Функция 
             )
             return 0
         else:
-            return left / 366 * rt * row['diff']
+            a = left / 366 * rt * (row['diff'])
+            if type(a) == Timedelta:
+                a = a.nanoseconds
+            return a
     else:
         if not row.needsplit:
-            return left / 365 * rt * row['diff']
+            a = left / 365 * rt * (row['diff'])
+            if type(a) == Timedelta:
+                a = a.nanoseconds
+            return a
         else:
-            return (left / get_y_days_on_split(row.prevpmt, row.payday)[0] * rt
-                    * split_month(row.prevpmt, row.payday)[0]) + (
-                           left / get_y_days_on_split(row.prevpmt, row.payday)[1]
-                           * rt * split_month(row.prevpmt, row.payday)[1])
+            a = (left / get_y_days_on_split(row.prevpmt, row.payday)[0] * rt
+                 * split_month(row.prevpmt, row.payday)[0]) + (
+                        left / get_y_days_on_split(row.prevpmt, row.payday)[1]
+                        * rt * split_month(row.prevpmt, row.payday)[1])
+            if type(a) == Timedelta:
+                a = a.nanoseconds
+            return a
 
 
 def itercred(rng, mat, sm, rt):  # итеративная функция построения графика по кредиту.
@@ -132,8 +146,9 @@ def itercred(rng, mat, sm, rt):  # итеративная функция пос�
     ind = 0
     for index, row in rng.iterrows():  # итерируем строки таблицы.
         # Индекс - номер строки от 0, row - кортеж с данными по строке.
-        rng.loc[index, 'proc'] = count_proc(row, last_i, rt)  # для каждой ячейки proc вычисляем величину процентов.
-        rng.loc[0, 'proc'] = count_proc(rng.loc[0], sm, rt)  # величина процентов для первого платежа
+        rng.loc[index, 'proc'] = count_proc(row, last_i, rt)  # для каждой ячейки proc вычисляем величину
+        # процентов.
+        rng.loc[0, 'proc'] = count_proc(rng.loc[0], sm, rt)# величина процентов для первого платежа
         rng.loc[index, 'cred'] = rng.loc[index, 'annuity'] - rng.loc[index, 'proc']
         # после вычисления процентов вставляем платеж по ссуде исходя из величины аннуитета
 
@@ -171,16 +186,23 @@ def itercard(rng, sm, rt):  # итеративная функция постро
 
 
 def first(frm):  # дата первого платежа
-    return frm['payday'].iloc[0]
+    a = frm['payday'].iloc[0]
+    return a
 
 
 def qk(frame, base):  # коэффициент Q. Функция работает на таблице.
-    q = abs((frame['payday'] - first(frame)).dt.days // float(base))
+    # q = abs((frame['payday'] - first(frame)).dt.days // float(base))
+    a = frame['payday']
+    b = first(frame)
+    q = abs(((a - b)/np.timedelta64(1, 'D')).astype(int) // float(base))
     return q
 
 
 def ek(frame, base):  # коэффициент E. Работает на таблице.
-    i, d = divmod(((frame['payday'] - first(frame)).dt.days - frame.q * float(base)) / float(base), 1)
+    # i, d = divmod(((frame['payday'] - first(frame)).dt.days - frame.q * float(base)) / float(base), 1)
+    a = frame['payday']
+    b = first(frame)
+    i, d = divmod((((a - b)/np.timedelta64(1, 'D')).astype(int) - frame.q * float(base)) / float(base), 1)
     e = abs(d)
     return e
 
@@ -214,10 +236,10 @@ def leapinside():
     return lambda row: row.leapend & row.leapstart  # входит ли весь период в високосный год.
 
 
-def graph(sm, mat, rt, dtstart, pday, card, card_comm, sum_card_comm, strah):
+def graph(sm, mat, rt, dtstart, pday, card, card_comm, sum_card_comm, card_comm_postpone, strah):
     dtend = dtstart + monthdelta(mat)  # Дата окончания.
-    dtrange = pd.DataFrame(data=nxtdt(dtstart, mat, dtshift, pday), columns={
-        'payday'})  # формируем массив dtrange со столбцом payday - дата платежа, с которым будем работать.
+    dtrange = pd.DataFrame(data=nxtdt(dtstart, mat, dtshift, pday), columns=[
+        'payday',])  # формируем массив dtrange со столбцом payday - дата платежа, с которым будем работать.
     dtrange.loc[0, 'payday'] = dtstart
     dtrange.loc[mat, 'payday'] = dtend  # корректируем последний платеж. Перенос на рабочий день нам не нужен.
     dtrange['prevpmt'] = dtrange.payday.shift(1).fillna(
@@ -225,16 +247,21 @@ def graph(sm, mat, rt, dtstart, pday, card, card_comm, sum_card_comm, strah):
     dtrange.loc[0, 'prevpmt'] = dtstart
     dtrange.loc[1, 'prevpmt'] = dtstart
     dtrange = dtrange[['prevpmt', 'payday']]  # меняю столбцы местами. Мне в таком виде было удобней.
-    dtrange['diff'] = (
-            dtrange.payday - dtrange.prevpmt).dt.days  # вычисляем длительность между платежами.
+    dtrange['diff'] = pd.to_numeric((
+            dtrange.payday - dtrange.prevpmt).astype('timedelta64[s]')//86400) # вычисляем длительность
+    # между
+    # платежами. Секунды в дни
     dtrange['leapstart'] = dtrange.apply(leapstart(), axis=1)
     dtrange['leapend'] = dtrange.apply(leapend(), axis=1)
     dtrange['needsplit'] = dtrange.apply(needsplit(), axis=1)
     dtrange['leapinside'] = dtrange.apply(leapinside(), axis=1)
+    dtrange['annuity'] = 0.0
     dtrange['annuity'] = ann(rt, mat, sm)  # вставляем аннуитет.
-    dtrange['ostout'] = 0  # дефолт для первого прохода
-    dtrange['proc'] = 0  # дефолт для первого прохода
-    dtrange['cred'] = 0  # дефолт для первого прохода
+    dtrange['ostout'] = 0.0  # дефолт для первого прохода
+    dtrange['proc'] = 0.0  # дефолт для первого прохода
+    dtrange['cred'] = 0.0  # дефолт для первого прохода
+    dtrange['proc'] = pd.to_numeric(dtrange['proc'])
+    dtrange['cred'] = pd.to_numeric(dtrange['cred'])
     dtrange.drop(dtrange.index[0], inplace=True)  # сбрасываем интекс номеров строк. Для сортировки.
     dtrange.reset_index(drop=True, inplace=True)
     dtrange.loc[0, 'proc'] = count_proc(dtrange.iloc[0], sm, rt)  # считаем проценты для первого платежа.
@@ -260,27 +287,40 @@ def graph(sm, mat, rt, dtstart, pday, card, card_comm, sum_card_comm, strah):
 
     # Определяем параметры расчета ПСК
     if card == 1 and card_comm == 1:
-        dtrange.flow = dtrange.flow + sum_card_comm
+        if not card_comm_postpone:
+            dtrange.flow = dtrange.flow + sum_card_comm
+        if card_comm_postpone:
+            dtrange.flow[13:] = dtrange.flow[13:] + sum_card_comm
 
     pr = 0.00000000001  # параметры сходимости. Бесконечно увеличивать смысла нет, для float расчетов этого достаточно.
     maxiter = 100  # предельное число итераций, в ходе которых должна быть достигнута целевая сходимость
     itercount = 1  # глобальная переменная
+    dtrange['diff'] = dtrange['diff'].astype(int)
     nbase = dtrange['diff'].mode()  # наиболее часто встречающееся значение длительности базового периода.
     nbase = nbase[0]  # на всякий случай берем первый элемент
+    if type(nbase) == Timedelta:
+        nbase = nbase.nanoseconds
     cntbp = round(365 / nbase)  # число базовых периодов. Округляем до целых
     ratebp = rt / cntbp  # ставка базового периода
 
     # Готовим график к расчету ПСК #
 
     # добваляем в график еще один ряд. При расчете ПСК выдача - тоже денежный поток.
-    dtrange.loc[-1] = [dtstart, dtstart, 0, sm, 0, -sm, (-sm + sum_card_comm * card_comm)]
+    if card_comm_postpone:
+        add_comm = 0
+    else:
+        add_comm = sum_card_comm
+    dtrange.loc[-1] = [dtstart, dtstart, 0, sm, 0, -sm, (-sm + add_comm * card_comm)]
     dtrange.index = dtrange.index + 1  # обновляем индекс
     dtrange.sort_index(inplace=True)
     if card == 1:  # Только для карт. На протяжении всего периода сумма потока включает в себя сумму кредита.
         dtrange.loc[mat, 'cred'] = sm
         dtrange.loc[mat, 'flow'] = sm + dtrange.loc[mat, 'proc']
         dtrange.insert(4, 'Комиссия', sum_card_comm)
-        dtrange.loc[mat, 'Комиссия'] = 0
+        if card_comm_postpone:
+            dtrange.loc[:13, 'Комиссия'] = 0
+
+        # dtrange.loc[mat, 'Комиссия'] = 0
     strsum = sm * strah / 100 * 1 * mat / 12
     dtrange.flow[0] = dtrange.flow[0] + strsum
     # paste magic and unicorns here #

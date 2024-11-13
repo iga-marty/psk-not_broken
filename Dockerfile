@@ -17,4 +17,5 @@ RUN pip install -r requirements.txt
 COPY . /usr/src/psk/
 RUN chmod 600 gunicorn_starter.sh
 RUN chmod +x gunicorn_starter.sh
-ENTRYPOINT ["./gunicorn_starter.sh"]
+EXPOSE 5000
+ENTRYPOINT ["sh", "gunicorn_starter.sh"]
