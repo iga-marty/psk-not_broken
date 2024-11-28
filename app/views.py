@@ -6,8 +6,11 @@ from app.forms import PSKForm
 
 
 @app.route('/')
+
 @app.route('/index', methods=['GET', 'POST'])
+
 @app.route('/psk', methods=['GET', 'POST'])
+
 def psk():
     form = PSKForm()
     return render_template('psk.html', title='PSK', form=form)

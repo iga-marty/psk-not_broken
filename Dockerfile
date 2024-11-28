@@ -16,4 +16,5 @@ RUN pip install -r requirements.txt
 # copy project
 COPY . /usr/src/psk/
 
+# set entrypoint
 ENTRYPOINT ["./gunicorn_starter.sh"]

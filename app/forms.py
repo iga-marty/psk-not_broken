@@ -21,5 +21,3 @@ class PSKForm(Form):
     strah = FloatField('% СЖ', default=0.0)
     use_cache = HiddenField('Кэш', default=0)
     submit = SubmitField('Рассчитать')
-
-
