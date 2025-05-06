@@ -14,7 +14,7 @@ LiveCoding Session
 - Найтии исправить ошибки, препятствующие сборке и запуску.
 - Собрать и запустить приложение в docker. Убедиться в отсутствии ошибок.
 - Закрыть в контейнере все порты кроме 22, 80, 443, 5000, 5432 через firewall
-- Прописать index-url в pip.conf и mirror.yandex.ru в sources.list (deb822)/ *.repo
+- Прописать index-url в pip.conf и добавить mirror.yandex.ru в sources.list (deb822)/ *.repo
 - Установить в контейнер реверс на выбор. В качестве proxy pass использовать unix socket (сокет прописать в автостарт)
 - Установить Postgres 16. Создать БД.
 
