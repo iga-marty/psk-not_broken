@@ -59,12 +59,12 @@ def next_i_months(date, j):  # дата в будущем. Аналог addmonth
 
 
 def assert_holidays(i, y, a, b):
-    if i < y:
+    if i <= y:
         if b in [5, 6]:
-            a = a + datetime.timedelta(days=(7 - b))
+            a = a + datetime.timedelta(days=(6 - b))
     else:
-        if b in [5, 6]:
-            a = a + datetime.timedelta(days=-2)
+        if b in [1, 6]:
+            a = a + 2
     return a
 
 
