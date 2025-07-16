@@ -1,3 +1,8 @@
+<script type="text/javascript"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
 LiveCoding Session
 
 Приложение PSK служит для формирования графика платежей по кредиту с учетом комиссий и страхования и расчета полной 
