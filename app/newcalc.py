@@ -51,7 +51,12 @@ def typ_cred(inp):
 
 
 def ann(x, y, z):  # аннуитет. x - ставка, y - полный срок (формула уже учитывает сокращение на 1 месяц), z - сумма.
-    return z * ((x / 12 * ((1 + x / 12) ** (y - 1))) / ((1 + x / 12) ** (y - 1) - 1))
+    r = x / 12
+    try:
+        payment = z * (r * (1 + r) ** y) / ((1 + r) ** (y - 1) - 1)
+    except ZeroDivisionError:
+        payment = 0  
+    return round(payment, 2)
 
 
 def next_i_months(date, j):  # дата в будущем. Аналог addmonths())
