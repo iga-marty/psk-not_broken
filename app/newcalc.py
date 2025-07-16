@@ -217,8 +217,8 @@ def dfl(row, *rat):  # расчет дисконтированного дене�
 
 def dflder(row, *rat):  # расчет производной от дисконтированного денежного потока.
     rate = rat[0]
-    discder = -((row['flow'] * ((rate + 1) ** (-row['q'] - 1)) * (
-            (row['q'] * row['e'] * rate) + row['q'] + (row['e'] * rate) + row['e'])) / ((row['e'] * rate + 1) ** 2))
+    discder = -((row['flow'] * ((rate + 1) ** -row['q'] - 1)) *
+                   ((row['q'] * row['e'] * rate) - row['q'] + (row['e'] * rate))) / ((row['e'] * rate + 1) ** 2)
     return discder
 
 
