@@ -1,3 +1,14 @@
 /venv/
 __pycache__/
 .git/
+
+.idea
+.vscode
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+.env
+*.log
+tests
