@@ -52,24 +52,21 @@ def typ_cred(inp):
 
 def ann(x, y, z):  # аннуитет. x - ставка, y - полный срок (формула уже учитывает сокращение на 1 месяц), z - сумма.
     r = x / 12
-    try:
-        payment = z * (r * (1 + r) ** y) / ((1 + r) ** (y - 1) - 1)
-    except ZeroDivisionError:
-        payment = 0  
-    return round(payment, 2)
+    payment = z * (r * (1 + r) ** (y - 1)) / ((1 + r) ** (y - 1) - 1)
+    return payment
 
 
 def next_i_months(date, j):  # дата в будущем. Аналог addmonths())
     return date + monthdelta(j)
 
 
-def assert_holidays(i, y, a, b):
+def assert_holidays(i, y, a: datetime, b):
     if i <= y:
         if b in [5, 6]:
-            a = a + datetime.timedelta(days=(6 - b))
+            a = a + datetime.timedelta(days=(7 - b))
     else:
-        if b in [1, 6]:
-            a = a + 2
+        if b in [5, 6]:
+            a += datetime.timedelta(days=-2)
     return a
 
 
@@ -119,7 +116,7 @@ def get_y_days_on_split(start, end):  # определение количест�
 
 
 
-def count_proc(row, left, rt):  # счтаем проценты. Функция вызывается для точечного расчета процентов.
+def count_proc(row, left, rt):  # считаем проценты. Функция вызывается для точечного расчета процентов.
     if row.leapinside:
         if row.needsplit:
             print(
@@ -222,8 +219,9 @@ def dfl(row, *rat):  # расчет дисконтированного дене�
 
 def dflder(row, *rat):  # расчет производной от дисконтированного денежного потока.
     rate = rat[0]
-    discder = -((row['flow'] * ((rate + 1) ** -row['q'] - 1)) *
-                   ((row['q'] * row['e'] * rate) - row['q'] + (row['e'] * rate))) / ((row['e'] * rate + 1) ** 2)
+    discder = -((row['flow'] * ((rate + 1) ** (-row['q'] - 1)) *
+                   ((row['q'] * row['e'] * rate) + row['q'] + (row['e'] * rate) +
+                    row['e'])) / ((row['e'] * rate + 1) ** 2))
     return discder
 
 
