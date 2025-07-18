@@ -11,9 +11,16 @@ ENV PYTHONUNBUFFERED 1
 # copy and install dependencies, upgrade pip
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir gunicorn
 
 # copy project
 COPY . .
+
+RUN chmod +x ./gunicorn_starter.sh
+
+RUN apt-get update && apt-get install -y dos2unix \
+    && chmod +x ./gunicorn_starter.sh \
+    && dos2unix ./gunicorn_starter.sh
 
 # Создаем непривилегированного пользователя
 RUN adduser --disabled-password --no-create-home appuser
