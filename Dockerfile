@@ -22,10 +22,10 @@ RUN apt-get update && apt-get install -y dos2unix \
     && chmod +x ./gunicorn_starter.sh \
     && dos2unix ./gunicorn_starter.sh
 
-# Создаем непривилегированного пользователя
+# add abbuser
 RUN adduser --disabled-password --no-create-home appuser
 
-# Даем права на рабочую директорию
+# workdir rights
 RUN chown -R appuser:appuser /usr/src/psk
 
 USER appuser
